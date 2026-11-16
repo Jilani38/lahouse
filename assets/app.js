@@ -16,18 +16,25 @@
   // déclenche le retour haptique du système (iOS 18+). On le fait sur un interrupteur invisible.
   // Même méthode que la librairie ios-haptics : un interrupteur neuf, invisible,
   // ajouté puis retiré à chaque fois, et cliqué pendant un vrai "click" de l'utilisateur.
+  let hapLabel = null;
   const tapSwitch = () => {
-    const label = document.createElement("label");
-    label.setAttribute("aria-hidden", "true");
-    label.style.display = "none";
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.setAttribute("switch", "");
-    label.appendChild(input);
-    document.head.appendChild(label);
-    label.click();
-    document.head.removeChild(label);
+    if (!hapLabel) {
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.id = "lh-haptic";
+      input.setAttribute("switch", "");
+      input.style.display = "none";
+      hapLabel = document.createElement("label");
+      hapLabel.htmlFor = "lh-haptic";
+      hapLabel.style.display = "none";
+      hapLabel.setAttribute("aria-hidden", "true");
+      body.append(input, hapLabel);
+    }
+    hapLabel.click();
   };
+  // Sur iPhone, Safari n'envoie un "click" que si la zone touchée est cliquable :
+  // un gestionnaire directement sur <body> rend toute la page cliquable.
+  body.onclick = () => {};
   let lastHap = 0;
   const haptic = (strong) => {
     const t = performance.now();
@@ -223,7 +230,6 @@
   };
 
   medal.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
     medal.setPointerCapture(e.pointerId);
     M.drag = true;
     M.mode = "drag";

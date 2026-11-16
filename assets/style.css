@@ -427,6 +427,11 @@ body {
   .motto { bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
 
+/* iPhone : rend toute la page "cliquable", indispensable pour les vibrations */
+@media (hover: none) {
+  body, .medal { cursor: pointer; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; transition-delay: 0s !important; }
 }
