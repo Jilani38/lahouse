@@ -14,30 +14,34 @@
   /* ---------- Vibrations (iPhone + Android) ---------- */
   // iPhone : Safari n'a pas navigator.vibrate, mais basculer un interrupteur <input switch>
   // déclenche le retour haptique du système (iOS 18+). On le fait sur un interrupteur invisible.
-  const haptic = (() => {
+  // Même méthode que la librairie ios-haptics : un interrupteur neuf, invisible,
+  // ajouté puis retiré à chaque fois, et cliqué pendant un vrai "click" de l'utilisateur.
+  const tapSwitch = () => {
     const label = document.createElement("label");
-    label.className = "hap";
     label.setAttribute("aria-hidden", "true");
+    label.style.display = "none";
     const input = document.createElement("input");
     input.type = "checkbox";
     input.setAttribute("switch", "");
-    input.tabIndex = -1;
     label.appendChild(input);
-    body.appendChild(label);
-    let last = 0;
-    return (strong) => {
-      const t = performance.now();
-      if (t - last < 60) return;
-      last = t;
-      if (typeof navigator.vibrate === "function") {
-        navigator.vibrate(strong ? [12, 40, 18] : 10);
-        return;
-      }
-      label.click();
-      if (strong) setTimeout(() => label.click(), 90);
-      input.blur();
-    };
-  })();
+    document.head.appendChild(label);
+    label.click();
+    document.head.removeChild(label);
+  };
+  let lastHap = 0;
+  const haptic = (strong) => {
+    const t = performance.now();
+    if (t - lastHap < 50) return;
+    lastHap = t;
+    if (typeof navigator.vibrate === "function") {
+      navigator.vibrate(strong ? [14, 50, 22] : 10);
+      return;
+    }
+    try {
+      tapSwitch();
+      if (strong) setTimeout(tapSwitch, 110);
+    } catch (err) { /* rien */ }
+  };
 
   /* ---------- Cadre doré ---------- */
 
@@ -254,7 +258,6 @@
     } else if (Math.abs(M.vy) > 2) {
       M.hap = Math.abs(M.vy) > 12 ? "strong" : "light";
     }
-    if (e.pointerType !== "touch" && M.hap) { haptic(M.hap === "strong"); M.hap = null; }
     M.mode = "free";
   }
 
@@ -452,19 +455,22 @@
     if (!reduce) burst(e.clientX, e.clientY, 16, 1);
   }, { passive: true });
 
-  // Sur iPhone, le retour haptique doit partir d'un vrai geste : on le déclenche à la fin du toucher.
-  window.addEventListener("touchend", (e) => {
+  // Sur iPhone, le retour haptique ne marche que dans un "click" (un vrai tap).
+  window.addEventListener("click", (e) => {
     if (onMedal(e)) {
-      if (M.hap) haptic(M.hap === "strong");
+      haptic(M.hap === "strong");
       M.hap = null;
       return;
     }
     haptic(false);
-  }, { passive: true });
+  });
 
-  window.addEventListener("pointerup", (e) => {
-    if (e.pointerType === "touch" || onMedal(e)) return;
-    haptic(false);
+  // Un swipe sur la médaille ne produit pas de "click" : on tente aussi à la fin du toucher.
+  window.addEventListener("touchend", (e) => {
+    if (onMedal(e) && M.hap && M.moved >= 10) {
+      haptic(M.hap === "strong");
+      M.hap = null;
+    }
   }, { passive: true });
 
   let rz = 0;
