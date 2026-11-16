@@ -463,6 +463,11 @@
 
   // Sur iPhone, le retour haptique ne marche que dans un "click" (un vrai tap).
   window.addEventListener("click", (e) => {
+    // Tap sur un interrupteur natif : sur iPhone, Safari vibre déjà tout seul.
+    if (e.target.classList && e.target.classList.contains("hap-sw") && typeof navigator.vibrate !== "function") {
+      M.hap = null;
+      return;
+    }
     if (onMedal(e)) {
       haptic(M.hap === "strong");
       M.hap = null;

@@ -427,7 +427,25 @@ body {
   .motto { bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
 
-/* iPhone : rend toute la page "cliquable", indispensable pour les vibrations */
+/* Vibrations iPhone : de vrais interrupteurs natifs, invisibles, posés sous le doigt.
+   Quand on tape, c'est Safari lui-même qui bascule l'interrupteur et fait vibrer. */
+.hap-sw {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: .002;
+  z-index: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.medal .hap-sw { z-index: 3; border-radius: 50%; }
+.stage > *:not(.hap-sw) { position: relative; z-index: 1; }
+.stage > .emblem { position: relative; }
+
+/* iPhone : rend toute la page "cliquable" */
 @media (hover: none) {
   body, .medal { cursor: pointer; }
 }
